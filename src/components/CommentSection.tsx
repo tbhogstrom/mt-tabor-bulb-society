@@ -21,7 +21,8 @@ export function CommentSection({ postId, initialComments }: CommentSectionProps)
     setIsSubmitting(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
     // Check honeypot
     if (formData.get('website')) {
@@ -54,7 +55,7 @@ export function CommentSection({ postId, initialComments }: CommentSectionProps)
       setReplyTo(null);
 
       // Reset form
-      e.currentTarget.reset();
+      form.reset();
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
