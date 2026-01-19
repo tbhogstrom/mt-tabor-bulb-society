@@ -6,6 +6,10 @@ import { getPost, getComments } from '@/lib/data';
 import { NEIGHBORHOODS } from '@/types';
 import { CommentSection } from '@/components/CommentSection';
 
+// Force dynamic rendering to ensure fresh data on each request
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PostPageProps {
   params: Promise<{ id: string }>;
 }

@@ -4,6 +4,10 @@ import { getPost, getComments, createComment } from '@/lib/data';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { Comment } from '@/types';
 
+// Disable caching for this API route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
@@ -17,7 +21,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   const comments = await getComments(id);
-  return NextResponse.json(comments);
+  
+  // Return with no-cache headers
+  return NextResponse.json(comments, {
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+    },
+  });
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
