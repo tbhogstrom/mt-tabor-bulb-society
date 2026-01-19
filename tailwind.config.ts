@@ -1,0 +1,107 @@
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // Mt Tabor Bulb Society Color Palette
+        volcanic: {
+          DEFAULT: '#3D2B1F',
+          50: '#F5EDE8',
+          100: '#E8DDD4',
+          200: '#CFBAA8',
+          300: '#B6977C',
+          400: '#9D7450',
+          500: '#3D2B1F',
+          600: '#32231A',
+          700: '#271C14',
+          800: '#1C140E',
+          900: '#110C09',
+        },
+        moss: {
+          DEFAULT: '#4A5D23',
+          50: '#E8EDD9',
+          100: '#D5DEB8',
+          200: '#B3C47D',
+          300: '#8FA847',
+          400: '#6A8132',
+          500: '#4A5D23',
+          600: '#3D4D1D',
+          700: '#303D17',
+          800: '#232D11',
+          900: '#161D0B',
+        },
+        crocus: {
+          DEFAULT: '#7B4B94',
+          50: '#F3EBF6',
+          100: '#E5D5EC',
+          200: '#CBA8D9',
+          300: '#B17BC6',
+          400: '#974EB3',
+          500: '#7B4B94',
+          600: '#653E7A',
+          700: '#4F3160',
+          800: '#392446',
+          900: '#23172C',
+        },
+        daffodil: {
+          DEFAULT: '#D4A029',
+          50: '#FBF5E6',
+          100: '#F7EACC',
+          200: '#EFD599',
+          300: '#E7C066',
+          400: '#DFAB33',
+          500: '#D4A029',
+          600: '#AE8322',
+          700: '#88661B',
+          800: '#624914',
+          900: '#3C2C0D',
+        },
+        parchment: {
+          DEFAULT: '#F5F1E6',
+          50: '#FDFCFA',
+          100: '#FAF8F3',
+          200: '#F5F1E6',
+          300: '#EBE4D1',
+          400: '#E1D7BC',
+          500: '#D7CAA7',
+          600: '#C4B68C',
+          700: '#B1A271',
+          800: '#9E8E56',
+          900: '#7A6D43',
+        },
+        charcoal: {
+          DEFAULT: '#2C2C2C',
+          50: '#E8E8E8',
+          100: '#D1D1D1',
+          200: '#A3A3A3',
+          300: '#757575',
+          400: '#474747',
+          500: '#2C2C2C',
+          600: '#242424',
+          700: '#1C1C1C',
+          800: '#141414',
+          900: '#0C0C0C',
+        },
+      },
+      fontFamily: {
+        serif: ['Playfair Display', 'Georgia', 'serif'],
+        sans: ['Source Sans Pro', 'system-ui', 'sans-serif'],
+      },
+      backgroundImage: {
+        'parchment-texture': "url('/textures/parchment.png')",
+      },
+      borderRadius: {
+        'organic': '0.625rem',
+      },
+    },
+  },
+  plugins: [],
+}
+
+export default config
