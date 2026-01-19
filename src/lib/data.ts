@@ -19,7 +19,12 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
       return defaultValue;
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return defaultValue;
+    }
+
+    const data = JSON.parse(text);
     return data as T;
   } catch (error) {
     console.error(`Error reading blob ${key}:`, error);
