@@ -57,8 +57,9 @@ export function NewPostForm() {
         throw new Error(data.error || 'Failed to create post');
       }
 
-      const post = await response.json();
-      router.push(`/forum/${post.id}`);
+      // Navigate to forum and refresh to show the new post
+      // Using replace + refresh pattern to avoid back-button issues
+      router.replace('/forum');
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -132,7 +133,7 @@ export function NewPostForm() {
                 ref={fileInputRef}
                 type="file"
                 name="image"
-                accept="image/jpeg,image/png,image/heic"
+                accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif"
                 onChange={handleFileChange}
                 className="hidden"
                 required

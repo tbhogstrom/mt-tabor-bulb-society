@@ -5,7 +5,8 @@ import { getPosts, createPost } from '@/lib/data';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { ForumPost, Neighborhood } from '@/types';
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/heic'];
+// Include image/heif for iOS Safari compatibility (Safari may send HEIF instead of HEIC)
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function GET(request: NextRequest) {
@@ -45,8 +46,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Image is required' }, { status: 400 });
     }
 
-    // Validate file type
-    if (!ALLOWED_TYPES.includes(imageFile.type)) {
+    // Validate file type - also check file extension for Safari compatibility
+    const fileExtension = imageFile.name.split('.').pop()?.toLowerCase() || '';
+    const validExtensions = ['jpg', 'jpeg', 'png', 'heic', 'heif'];
+    const hasValidType = ALLOWED_TYPES.includes(imageFile.type);
+    const hasValidExtension = validExtensions.includes(fileExtension);
+    
+    // Accept if either MIME type or extension is valid (Safari may not send correct MIME type)
+    if (!hasValidType && !hasValidExtension) {
       return NextResponse.json(
         { error: 'Invalid file type. Please upload a JPEG, PNG, or HEIC image.' },
         { status: 400 }
