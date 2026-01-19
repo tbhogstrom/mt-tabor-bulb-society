@@ -45,6 +45,7 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
     await put(key, jsonString, {
       access: 'public',
       contentType: 'application/json',
+      addRandomSuffix: false,
     });
   } catch (error) {
     console.error(`Error writing blob ${key}:`, error);
