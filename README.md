@@ -1,6 +1,6 @@
 # Mt Tabor Bulb Society Website
 
-**Version:** 1.0
+**Version:** 1.0.1
 **Date:** January 19, 2026
 **Author:** Tyler Falcon
 **Status:** Draft
