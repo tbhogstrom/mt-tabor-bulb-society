@@ -1,31 +1,50 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { put, list, del } from '@vercel/blob';
 import { ForumPost, Comment, AdminStats, Neighborhood } from '@/types';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
-const COMMENTS_FILE = path.join(DATA_DIR, 'comments.json');
+const POSTS_BLOB_KEY = 'data/posts.json';
+const COMMENTS_BLOB_KEY = 'data/comments.json';
 
-async function ensureDataDir() {
+async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
   try {
-    await fs.access(DATA_DIR);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  }
-}
+    // List blobs to find our data file
+    const { blobs } = await list({ prefix: key });
 
-async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch {
+    if (blobs.length === 0) {
+      return defaultValue;
+    }
+
+    // Fetch the blob content
+    const response = await fetch(blobs[0].url);
+    if (!response.ok) {
+      return defaultValue;
+    }
+
+    const data = await response.json();
+    return data as T;
+  } catch (error) {
+    console.error(`Error reading blob ${key}:`, error);
     return defaultValue;
   }
 }
 
-async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
-  await ensureDataDir();
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+async function writeBlobJson<T>(key: string, data: T): Promise<void> {
+  try {
+    // Delete existing blob if it exists
+    const { blobs } = await list({ prefix: key });
+    for (const blob of blobs) {
+      await del(blob.url);
+    }
+
+    // Write new data
+    const jsonString = JSON.stringify(data, null, 2);
+    await put(key, jsonString, {
+      access: 'public',
+      contentType: 'application/json',
+    });
+  } catch (error) {
+    console.error(`Error writing blob ${key}:`, error);
+    throw error;
+  }
 }
 
 // Posts
@@ -35,8 +54,8 @@ export async function getPosts(options?: {
   limit?: number;
   offset?: number;
 }): Promise<ForumPost[]> {
-  const posts = await readJsonFile<ForumPost[]>(POSTS_FILE, []);
-  const comments = await readJsonFile<Comment[]>(COMMENTS_FILE, []);
+  const posts = await readBlobJson<ForumPost[]>(POSTS_BLOB_KEY, []);
+  const comments = await readBlobJson<Comment[]>(COMMENTS_BLOB_KEY, []);
 
   let filtered = options?.includeDeleted
     ? posts
@@ -66,12 +85,12 @@ export async function getPosts(options?: {
 }
 
 export async function getPost(id: string): Promise<ForumPost | null> {
-  const posts = await readJsonFile<ForumPost[]>(POSTS_FILE, []);
+  const posts = await readBlobJson<ForumPost[]>(POSTS_BLOB_KEY, []);
   const post = posts.find(p => p.id === id);
 
   if (!post) return null;
 
-  const comments = await readJsonFile<Comment[]>(COMMENTS_FILE, []);
+  const comments = await readBlobJson<Comment[]>(COMMENTS_BLOB_KEY, []);
   return {
     ...post,
     commentCount: comments.filter(c => c.postId === id && !c.isDeleted).length,
@@ -79,14 +98,14 @@ export async function getPost(id: string): Promise<ForumPost | null> {
 }
 
 export async function createPost(post: ForumPost): Promise<ForumPost> {
-  const posts = await readJsonFile<ForumPost[]>(POSTS_FILE, []);
+  const posts = await readBlobJson<ForumPost[]>(POSTS_BLOB_KEY, []);
   posts.push(post);
-  await writeJsonFile(POSTS_FILE, posts);
+  await writeBlobJson(POSTS_BLOB_KEY, posts);
   return post;
 }
 
 export async function deletePost(id: string, adminId: string): Promise<boolean> {
-  const posts = await readJsonFile<ForumPost[]>(POSTS_FILE, []);
+  const posts = await readBlobJson<ForumPost[]>(POSTS_BLOB_KEY, []);
   const index = posts.findIndex(p => p.id === id);
 
   if (index === -1) return false;
@@ -98,13 +117,13 @@ export async function deletePost(id: string, adminId: string): Promise<boolean> 
     deletedBy: adminId,
   };
 
-  await writeJsonFile(POSTS_FILE, posts);
+  await writeBlobJson(POSTS_BLOB_KEY, posts);
   return true;
 }
 
 // Comments
 export async function getComments(postId: string, includeDeleted = false): Promise<Comment[]> {
-  const comments = await readJsonFile<Comment[]>(COMMENTS_FILE, []);
+  const comments = await readBlobJson<Comment[]>(COMMENTS_BLOB_KEY, []);
 
   let filtered = comments.filter(c => c.postId === postId);
   if (!includeDeleted) {
@@ -115,14 +134,14 @@ export async function getComments(postId: string, includeDeleted = false): Promi
 }
 
 export async function createComment(comment: Comment): Promise<Comment> {
-  const comments = await readJsonFile<Comment[]>(COMMENTS_FILE, []);
+  const comments = await readBlobJson<Comment[]>(COMMENTS_BLOB_KEY, []);
   comments.push(comment);
-  await writeJsonFile(COMMENTS_FILE, comments);
+  await writeBlobJson(COMMENTS_BLOB_KEY, comments);
   return comment;
 }
 
 export async function deleteComment(id: string): Promise<boolean> {
-  const comments = await readJsonFile<Comment[]>(COMMENTS_FILE, []);
+  const comments = await readBlobJson<Comment[]>(COMMENTS_BLOB_KEY, []);
   const index = comments.findIndex(c => c.id === id);
 
   if (index === -1) return false;
@@ -132,14 +151,14 @@ export async function deleteComment(id: string): Promise<boolean> {
     isDeleted: true,
   };
 
-  await writeJsonFile(COMMENTS_FILE, comments);
+  await writeBlobJson(COMMENTS_BLOB_KEY, comments);
   return true;
 }
 
 // Admin Stats
 export async function getAdminStats(): Promise<AdminStats> {
-  const posts = await readJsonFile<ForumPost[]>(POSTS_FILE, []);
-  const comments = await readJsonFile<Comment[]>(COMMENTS_FILE, []);
+  const posts = await readBlobJson<ForumPost[]>(POSTS_BLOB_KEY, []);
+  const comments = await readBlobJson<Comment[]>(COMMENTS_BLOB_KEY, []);
 
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
