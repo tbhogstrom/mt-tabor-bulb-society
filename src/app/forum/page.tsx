@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { getPosts } from '@/lib/data';
 import { PostCard } from '@/components/PostCard';
-import { NEIGHBORHOODS, Neighborhood } from '@/types';
+import { NEIGHBORHOODS, Neighborhood, PostType } from '@/types';
 import { NewPostForm } from '@/components/NewPostForm';
 
 export const metadata: Metadata = {
@@ -20,11 +20,15 @@ interface ForumPageProps {
 
 export default async function ForumPage({ searchParams }: ForumPageProps) {
   const params = await searchParams;
-  const filter = params.filter as 'recent' | 'needs-id' | Neighborhood | undefined;
+  const filter = params.filter as 'recent' | 'needs-id' | 'frost-warnings' | Neighborhood | undefined;
   const showNewPostForm = params.action === 'new';
 
+  // Determine postType filter
+  const postTypeFilter: PostType | undefined = filter === 'frost-warnings' ? 'frost-warning' : undefined;
+
   const posts = await getPosts({
-    filter: filter || 'recent',
+    filter: filter === 'frost-warnings' ? 'recent' : (filter || 'recent'),
+    postType: postTypeFilter,
     limit: 50,
   });
 
@@ -69,6 +73,9 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
             </FilterLink>
             <FilterLink href="/forum?filter=needs-id" active={filter === 'needs-id'}>
               Needs ID
+            </FilterLink>
+            <FilterLink href="/forum?filter=frost-warnings" active={filter === 'frost-warnings'} variant="frost">
+              Frost Warnings
             </FilterLink>
             <span className="text-charcoal-300 mx-2">|</span>
             {NEIGHBORHOODS.map((n) => (
@@ -127,18 +134,25 @@ function FilterLink({
   href,
   active,
   children,
+  variant,
 }: {
   href: string;
   active: boolean;
   children: React.ReactNode;
+  variant?: 'frost';
 }) {
+  const isFrost = variant === 'frost';
   return (
     <Link
       href={href}
       className={`px-3 py-1 rounded-full text-sm transition-colors ${
         active
-          ? 'bg-volcanic text-parchment'
-          : 'bg-white text-charcoal-600 hover:bg-volcanic-100'
+          ? isFrost
+            ? 'bg-sky-600 text-white'
+            : 'bg-volcanic text-parchment'
+          : isFrost
+            ? 'bg-sky-100 text-sky-700 hover:bg-sky-200'
+            : 'bg-white text-charcoal-600 hover:bg-volcanic-100'
       }`}
     >
       {children}
