@@ -22,6 +22,8 @@ export interface ForumPost {
   imageUrl: string;
   thumbnailUrl: string;
   displayName: string;
+  title: string;
+  body?: string; // Supports markdown
   caption?: string;
   neighborhood?: Neighborhood;
   speciesGuess?: string;
