@@ -25,9 +25,16 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     };
   }
 
+  const isFrostWarning = post.postType === 'frost-warning';
+  const defaultTitle = isFrostWarning
+    ? `Frost Warning from ${post.displayName}`
+    : `${post.displayName}'s Bloom`;
+
   return {
-    title: `${post.title || post.displayName + "'s Bloom"} | Mt Tabor Bulb Society`,
-    description: post.body || post.caption || 'A photo shared on the Mt Tabor Bulb Society forum.',
+    title: `${post.title || defaultTitle} | Mt Tabor Bulb Society`,
+    description: post.body || post.caption || (isFrostWarning
+      ? `Frost warning: ${post.temperature}°F reported by ${post.displayName}`
+      : 'A photo shared on the Mt Tabor Bulb Society forum.'),
   };
 }
 
@@ -41,11 +48,12 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const comments = await getComments(id);
   const neighborhood = NEIGHBORHOODS.find(n => n.value === post.neighborhood);
+  const isFrostWarning = post.postType === 'frost-warning';
 
   return (
     <>
       {/* Back Link */}
-      <div className="bg-parchment-100 py-3 border-b border-parchment-300">
+      <div className={`py-3 border-b ${isFrostWarning ? 'bg-sky-50 border-sky-200' : 'bg-parchment-100 border-parchment-300'}`}>
         <div className="container-wide">
           <Link
             href="/forum"
@@ -61,29 +69,58 @@ export default async function PostPage({ params }: PostPageProps) {
       <section className="section">
         <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Image */}
-            <div className="relative aspect-square bg-charcoal-100 rounded-organic overflow-hidden">
-              <Image
-                src={post.imageUrl}
-                alt={post.caption || 'Bulb photo'}
-                fill
-                className="object-contain"
-                priority
-              />
+            {/* Image or Frost Warning Placeholder */}
+            <div className={`relative aspect-square rounded-organic overflow-hidden ${
+              isFrostWarning && !post.imageUrl
+                ? 'bg-gradient-to-br from-sky-100 to-sky-200'
+                : 'bg-charcoal-100'
+            }`}>
+              {post.imageUrl ? (
+                <Image
+                  src={post.imageUrl}
+                  alt={post.caption || (isFrostWarning ? 'Frost warning photo' : 'Bulb photo')}
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              ) : isFrostWarning ? (
+                <div className="w-full h-full flex flex-col items-center justify-center text-sky-600">
+                  <SnowflakeIcon className="w-32 h-32 mb-4" />
+                  {post.temperature !== undefined && (
+                    <span className="text-5xl font-bold">{post.temperature}°F</span>
+                  )}
+                </div>
+              ) : null}
+              {/* Temperature overlay for frost warnings with images */}
+              {isFrostWarning && post.imageUrl && post.temperature !== undefined && (
+                <div className="absolute bottom-4 left-4 bg-sky-600/90 text-white px-4 py-2 rounded-full text-2xl font-bold">
+                  {post.temperature}°F
+                </div>
+              )}
             </div>
 
             {/* Details */}
             <div>
-              <h1 className="text-2xl font-serif mb-3">
+              {/* Frost Warning Badge */}
+              {isFrostWarning && (
+                <div className="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1 rounded-full text-sm mb-4">
+                  <SnowflakeIcon className="w-4 h-4" />
+                  Frost Warning
+                </div>
+              )}
+
+              <h1 className={`text-2xl font-serif mb-3 ${isFrostWarning ? 'text-sky-900' : ''}`}>
                 {post.title || post.caption || 'Untitled'}
               </h1>
 
               <div className="flex flex-wrap items-center gap-3 mb-4">
                 <span className="text-charcoal-600">by {post.displayName}</span>
                 {neighborhood && (
-                  <span className="badge-moss">{neighborhood.label}</span>
+                  <span className={isFrostWarning ? 'bg-sky-200 text-sky-800 px-2 py-0.5 rounded-full text-sm' : 'badge-moss'}>
+                    {neighborhood.label}
+                  </span>
                 )}
-                {post.needsIdHelp && (
+                {post.needsIdHelp && !isFrostWarning && (
                   <span className="badge-crocus">Needs ID</span>
                 )}
               </div>
@@ -91,6 +128,19 @@ export default async function PostPage({ params }: PostPageProps) {
               <p className="text-sm text-charcoal-400 mb-6">
                 {formatDate(post.createdAt)}
               </p>
+
+              {/* Temperature display for frost warnings */}
+              {isFrostWarning && post.temperature !== undefined && (
+                <div className="bg-sky-50 border border-sky-200 rounded-organic p-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <ThermometerIcon className="w-8 h-8 text-sky-600" />
+                    <div>
+                      <p className="text-sm text-sky-600 font-medium">Reported Temperature</p>
+                      <p className="text-3xl font-bold text-sky-800">{post.temperature}°F</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {post.body && (
                 <div className="prose prose-charcoal max-w-none mb-6">
@@ -102,7 +152,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 <p className="text-charcoal-600 mb-6 text-lg">{post.caption}</p>
               )}
 
-              {post.speciesGuess && (
+              {post.speciesGuess && !isFrostWarning && (
                 <div className="bg-moss-50 border border-moss-200 rounded-organic p-4 mb-6">
                   <p className="text-sm text-moss-700">
                     <span className="font-medium">Species guess:</span>{' '}
@@ -111,7 +161,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 </div>
               )}
 
-              {post.needsIdHelp && (
+              {post.needsIdHelp && !isFrostWarning && (
                 <div className="bg-crocus-50 border border-crocus-200 rounded-organic p-4 mb-6">
                   <p className="text-sm text-crocus-700">
                     This poster would like help identifying this plant!
@@ -139,6 +189,22 @@ function BackIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+    </svg>
+  );
+}
+
+function SnowflakeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v20M12 2l3 3M12 2L9 5M12 22l3-3M12 22l-3-3M2 12h20M2 12l3 3M2 12l3-3M22 12l-3 3M22 12l-3-3M5.6 5.6l12.8 12.8M5.6 5.6l.7 3.7m-.7-3.7l3.7.7M18.4 18.4l-.7-3.7m.7 3.7l-3.7-.7M18.4 5.6L5.6 18.4M18.4 5.6l-3.7.7m3.7-.7l-.7 3.7M5.6 18.4l3.7-.7m-3.7.7l.7-3.7" />
+    </svg>
+  );
+}
+
+function ThermometerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9V3m0 6a3 3 0 100 6 3 3 0 000-6zm0 6v6m-4-6a4 4 0 118 0 4 4 0 01-8 0z" />
     </svg>
   );
 }

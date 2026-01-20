@@ -17,10 +17,13 @@ export const NEIGHBORHOODS: { value: Neighborhood; label: string }[] = [
   { value: 'other', label: 'Other' },
 ];
 
+export type PostType = 'bloom' | 'frost-warning';
+
 export interface ForumPost {
   id: string;
-  imageUrl: string;
-  thumbnailUrl: string;
+  postType: PostType;
+  imageUrl?: string;
+  thumbnailUrl?: string;
   displayName: string;
   title: string;
   body?: string; // Supports markdown
@@ -28,6 +31,7 @@ export interface ForumPost {
   neighborhood?: Neighborhood;
   speciesGuess?: string;
   needsIdHelp: boolean;
+  temperature?: number; // Fahrenheit, required for frost warnings
   createdAt: string;
   isDeleted: boolean;
   deletedAt?: string;

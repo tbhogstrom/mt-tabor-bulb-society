@@ -1,5 +1,5 @@
 import { put, list, del } from '@vercel/blob';
-import { ForumPost, Comment, AdminStats, Neighborhood } from '@/types';
+import { ForumPost, Comment, AdminStats, Neighborhood, PostType } from '@/types';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -137,6 +137,7 @@ async function writeJson<T>(key: string, data: T): Promise<void> {
 export async function getPosts(options?: {
   includeDeleted?: boolean;
   filter?: 'recent' | 'needs-id' | Neighborhood;
+  postType?: PostType;
   limit?: number;
   offset?: number;
 }): Promise<ForumPost[]> {
@@ -147,11 +148,17 @@ export async function getPosts(options?: {
     ? posts
     : posts.filter(p => !p.isDeleted);
 
-  // Add comment counts
+  // Add comment counts and default postType for backwards compatibility
   filtered = filtered.map(post => ({
     ...post,
+    postType: post.postType || 'bloom', // Default to 'bloom' for existing posts
     commentCount: comments.filter(c => c.postId === post.id && !c.isDeleted).length,
   }));
+
+  // Filter by post type if specified
+  if (options?.postType) {
+    filtered = filtered.filter(p => p.postType === options.postType);
+  }
 
   // Apply filters
   if (options?.filter === 'needs-id') {
@@ -179,6 +186,7 @@ export async function getPost(id: string): Promise<ForumPost | null> {
   const comments = await readJson<Comment[]>(COMMENTS_BLOB_KEY, []);
   return {
     ...post,
+    postType: post.postType || 'bloom', // Default to 'bloom' for existing posts
     commentCount: comments.filter(c => c.postId === id && !c.isDeleted).length,
   };
 }

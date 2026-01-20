@@ -3,7 +3,7 @@ import { put } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 import { getPosts, createPost } from '@/lib/data';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
-import { ForumPost, Neighborhood } from '@/types';
+import { ForumPost, Neighborhood, PostType } from '@/types';
 
 // Include image/heif for iOS Safari compatibility (Safari may send HEIF instead of HEIC)
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
@@ -40,32 +40,54 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid submission' }, { status: 400 });
     }
 
+    // Get post type (defaults to 'bloom' for backwards compatibility)
+    const postType = (formData.get('postType') as PostType) || 'bloom';
+
+    // Validate temperature for frost warnings
+    let temperature: number | undefined;
+    if (postType === 'frost-warning') {
+      const tempStr = formData.get('temperature') as string;
+      if (!tempStr) {
+        return NextResponse.json({ error: 'Temperature is required for frost warnings' }, { status: 400 });
+      }
+      temperature = parseInt(tempStr, 10);
+      if (isNaN(temperature) || temperature < -50 || temperature > 50) {
+        return NextResponse.json({ error: 'Temperature must be between -50 and 50°F' }, { status: 400 });
+      }
+    }
+
     // Get image file
     const imageFile = formData.get('image') as File | null;
-    if (!imageFile) {
+    const hasImage = imageFile && imageFile.size > 0;
+
+    // Image is required for bloom posts, optional for frost warnings
+    if (postType === 'bloom' && !hasImage) {
       return NextResponse.json({ error: 'Image is required' }, { status: 400 });
     }
 
-    // Validate file type - also check file extension for Safari compatibility
-    const fileExtension = imageFile.name.split('.').pop()?.toLowerCase() || '';
-    const validExtensions = ['jpg', 'jpeg', 'png', 'heic', 'heif'];
-    const hasValidType = ALLOWED_TYPES.includes(imageFile.type);
-    const hasValidExtension = validExtensions.includes(fileExtension);
-    
-    // Accept if either MIME type or extension is valid (Safari may not send correct MIME type)
-    if (!hasValidType && !hasValidExtension) {
-      return NextResponse.json(
-        { error: 'Invalid file type. Please upload a JPEG, PNG, or HEIC image.' },
-        { status: 400 }
-      );
-    }
+    // Validate image if provided
+    if (hasImage) {
+      // Validate file type - also check file extension for Safari compatibility
+      const fileExtension = imageFile.name.split('.').pop()?.toLowerCase() || '';
+      const validExtensions = ['jpg', 'jpeg', 'png', 'heic', 'heif'];
+      const hasValidType = ALLOWED_TYPES.includes(imageFile.type);
+      const hasValidExtension = validExtensions.includes(fileExtension);
 
-    // Validate file size
-    if (imageFile.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'Image is too large. Maximum size is 10MB.' },
-        { status: 400 }
-      );
+      // Accept if either MIME type or extension is valid (Safari may not send correct MIME type)
+      if (!hasValidType && !hasValidExtension) {
+        return NextResponse.json(
+          { error: 'Invalid file type. Please upload a JPEG, PNG, or HEIC image.' },
+          { status: 400 }
+        );
+      }
+
+      // Validate file size
+      if (imageFile.size > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { error: 'Image is too large. Maximum size is 10MB.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Get form fields
@@ -88,36 +110,40 @@ export async function POST(request: NextRequest) {
     // Generate post ID
     const postId = uuidv4();
     const timestamp = Date.now();
-    const extension = imageFile.name.split('.').pop() || 'jpg';
 
-    // Upload original image to Vercel Blob
-    let imageUrl = '';
-    let thumbnailUrl = '';
+    // Upload original image to Vercel Blob (if provided)
+    let imageUrl: string | undefined;
+    let thumbnailUrl: string | undefined;
 
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      // Production: Use Vercel Blob
-      const blob = await put(`posts/${postId}/original.${extension}`, imageFile, {
-        access: 'public',
-        contentType: imageFile.type,
-      });
-      imageUrl = blob.url;
+    if (hasImage) {
+      const extension = imageFile.name.split('.').pop() || 'jpg';
 
-      // For MVP, use the same image as thumbnail
-      // TODO: Implement Sharp-based thumbnail generation
-      thumbnailUrl = blob.url;
-    } else {
-      // Development: Store locally or use placeholder
-      // In a real setup, you'd save to local filesystem
-      // For now, we'll use a data URL approach for testing
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
-      const base64 = buffer.toString('base64');
-      imageUrl = `data:${imageFile.type};base64,${base64}`;
-      thumbnailUrl = imageUrl;
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        // Production: Use Vercel Blob
+        const blob = await put(`posts/${postId}/original.${extension}`, imageFile, {
+          access: 'public',
+          contentType: imageFile.type,
+        });
+        imageUrl = blob.url;
+
+        // For MVP, use the same image as thumbnail
+        // TODO: Implement Sharp-based thumbnail generation
+        thumbnailUrl = blob.url;
+      } else {
+        // Development: Store locally or use placeholder
+        // In a real setup, you'd save to local filesystem
+        // For now, we'll use a data URL approach for testing
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        const base64 = buffer.toString('base64');
+        imageUrl = `data:${imageFile.type};base64,${base64}`;
+        thumbnailUrl = imageUrl;
+      }
     }
 
     // Create post record
     const post: ForumPost = {
       id: postId,
+      postType,
       imageUrl,
       thumbnailUrl,
       displayName,
@@ -127,6 +153,7 @@ export async function POST(request: NextRequest) {
       neighborhood,
       speciesGuess,
       needsIdHelp,
+      temperature,
       createdAt: new Date(timestamp).toISOString(),
       isDeleted: false,
     };
