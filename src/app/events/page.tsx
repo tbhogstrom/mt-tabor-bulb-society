@@ -72,6 +72,94 @@ export default function EventsPage() {
         </div>
       </section>
 
+      {/* Weekly Walk Feature */}
+      <section className="section bg-moss-50 border-y border-moss-200">
+        <div className="container-wide">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <span className="badge-moss mb-4 inline-block">Every Week</span>
+              <h2 className="text-3xl md:text-4xl font-serif mb-4">
+                Join Our Weekly Bulb Walk
+              </h2>
+              <p className="text-lg text-charcoal-600 mb-6">
+                Every Monday morning, we gather to explore our neighborhood&apos;s
+                blooming treasures. It&apos;s part plant ID, part garden talk, part
+                community connection — and sometimes we even get our hands dirty
+                with volunteer projects.
+              </p>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-3">
+                  <span className="text-moss mt-1">
+                    <CheckIcon className="w-5 h-5" />
+                  </span>
+                  <span className="text-charcoal-600">
+                    <strong>Identify bulb flowers</strong> with experienced members
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-moss mt-1">
+                    <CheckIcon className="w-5 h-5" />
+                  </span>
+                  <span className="text-charcoal-600">
+                    <strong>Talk garden</strong> — share tips, swap stories, solve problems
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-moss mt-1">
+                    <CheckIcon className="w-5 h-5" />
+                  </span>
+                  <span className="text-charcoal-600">
+                    <strong>Community projects</strong> — help beautify local spaces
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-moss mt-1">
+                    <CheckIcon className="w-5 h-5" />
+                  </span>
+                  <span className="text-charcoal-600">
+                    <strong>Get dirty</strong> — occasional hands-on planting days
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div className="card p-6 md:p-8 bg-white">
+              <h3 className="font-serif text-xl mb-4">This Week&apos;s Walk</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-volcanic text-parchment rounded-organic p-3 text-center min-w-[70px]">
+                    <div className="text-xs uppercase tracking-wide">Every</div>
+                    <div className="text-xl font-serif font-bold">Mon</div>
+                  </div>
+                  <div>
+                    <p className="font-medium">Monday Morning Walk</p>
+                    <p className="text-sm text-charcoal-500">8:30 AM — Rain or shine!</p>
+                  </div>
+                </div>
+                <div className="border-t border-parchment-300 pt-4">
+                  <p className="text-sm text-charcoal-500 mb-2">
+                    <strong className="text-charcoal">Meeting Point:</strong>
+                  </p>
+                  <p className="text-charcoal-600">
+                    Loro Coffee
+                  </p>
+                  <p className="text-sm text-charcoal-400 mt-1">
+                    We rotate through different neighborhoods monthly
+                  </p>
+                </div>
+                <div className="border-t border-parchment-300 pt-4">
+                  <p className="text-sm text-charcoal-500 mb-2">
+                    <strong className="text-charcoal">What to Bring:</strong>
+                  </p>
+                  <p className="text-sm text-charcoal-600">
+                    Comfortable shoes, curiosity, and maybe gloves if you want to help out!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Upcoming Events */}
       <section className="section">
         <div className="container-wide">
@@ -222,6 +310,14 @@ function LocationIcon({ className }: { className?: string }) {
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
     </svg>
   );
 }
