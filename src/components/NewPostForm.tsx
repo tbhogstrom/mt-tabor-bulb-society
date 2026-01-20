@@ -156,6 +156,38 @@ export function NewPostForm() {
               />
             </div>
 
+            {/* Title */}
+            <div>
+              <label htmlFor="title" className="label">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                className="input"
+                placeholder="Give your post a title"
+                maxLength={150}
+                required
+              />
+            </div>
+
+            {/* Body */}
+            <div>
+              <label htmlFor="body" className="label">
+                Body
+              </label>
+              <textarea
+                id="body"
+                name="body"
+                className="input resize-none font-mono text-sm"
+                rows={6}
+                placeholder="Share more details about your bloom... (Markdown supported)"
+                maxLength={5000}
+              />
+              <p className="text-xs text-charcoal-400 mt-1">Supports Markdown formatting</p>
+            </div>
+
             {/* Caption */}
             <div>
               <label htmlFor="caption" className="label">

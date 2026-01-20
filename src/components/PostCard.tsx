@@ -32,15 +32,15 @@ export function PostCard({ post }: PostCardProps) {
         )}
       </div>
       <div className="p-4">
+        <h3 className="font-serif font-medium text-charcoal line-clamp-2 mb-2">
+          {post.title || post.caption || 'Untitled'}
+        </h3>
         <div className="flex items-start justify-between gap-2 mb-2">
-          <span className="font-medium text-charcoal truncate">{post.displayName}</span>
+          <span className="text-sm text-charcoal-500 truncate">{post.displayName}</span>
           {neighborhood && (
             <span className="badge-moss text-xs flex-shrink-0">{neighborhood.label}</span>
           )}
         </div>
-        {post.caption && (
-          <p className="text-sm text-charcoal-400 line-clamp-2 mb-2">{post.caption}</p>
-        )}
         {post.speciesGuess && (
           <p className="text-sm italic text-moss mb-2">&ldquo;{post.speciesGuess}&rdquo;</p>
         )}

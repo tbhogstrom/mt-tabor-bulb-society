@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { getPost, getComments } from '@/lib/data';
 import { NEIGHBORHOODS } from '@/types';
 import { CommentSection } from '@/components/CommentSection';
+import { MarkdownBody } from '@/components/MarkdownBody';
 
 // Force dynamic rendering to ensure fresh data on each request
 export const dynamic = 'force-dynamic';
@@ -25,8 +26,8 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   }
 
   return {
-    title: `${post.displayName}'s Bloom | Mt Tabor Bulb Society`,
-    description: post.caption || 'A photo shared on the Mt Tabor Bulb Society forum.',
+    title: `${post.title || post.displayName + "'s Bloom"} | Mt Tabor Bulb Society`,
+    description: post.body || post.caption || 'A photo shared on the Mt Tabor Bulb Society forum.',
   };
 }
 
@@ -73,8 +74,12 @@ export default async function PostPage({ params }: PostPageProps) {
 
             {/* Details */}
             <div>
-              <div className="flex flex-wrap items-start gap-3 mb-4">
-                <h1 className="text-2xl font-serif">{post.displayName}</h1>
+              <h1 className="text-2xl font-serif mb-3">
+                {post.title || post.caption || 'Untitled'}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <span className="text-charcoal-600">by {post.displayName}</span>
                 {neighborhood && (
                   <span className="badge-moss">{neighborhood.label}</span>
                 )}
@@ -87,7 +92,13 @@ export default async function PostPage({ params }: PostPageProps) {
                 {formatDate(post.createdAt)}
               </p>
 
-              {post.caption && (
+              {post.body && (
+                <div className="prose prose-charcoal max-w-none mb-6">
+                  <MarkdownBody content={post.body} />
+                </div>
+              )}
+
+              {post.caption && !post.body && (
                 <p className="text-charcoal-600 mb-6 text-lg">{post.caption}</p>
               )}
 

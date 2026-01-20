@@ -86,6 +86,79 @@
   .badge-daffodil {
     @apply badge bg-daffodil-100 text-daffodil-700;
   }
+
+  /* Markdown prose styling */
+  .prose {
+    @apply text-charcoal-600 leading-relaxed;
+  }
+
+  .prose p {
+    @apply mb-4;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4 {
+    @apply font-serif text-charcoal mb-3 mt-6 first:mt-0;
+  }
+
+  .prose h1 {
+    @apply text-2xl font-semibold;
+  }
+
+  .prose h2 {
+    @apply text-xl font-semibold;
+  }
+
+  .prose h3 {
+    @apply text-lg font-medium;
+  }
+
+  .prose ul, .prose ol {
+    @apply mb-4 pl-6;
+  }
+
+  .prose ul {
+    @apply list-disc;
+  }
+
+  .prose ol {
+    @apply list-decimal;
+  }
+
+  .prose li {
+    @apply mb-1;
+  }
+
+  .prose a {
+    @apply text-moss hover:text-moss-600 underline underline-offset-2;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-moss-200 pl-4 italic text-charcoal-500 my-4;
+  }
+
+  .prose code {
+    @apply bg-charcoal-100 px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+
+  .prose pre {
+    @apply bg-charcoal-100 p-4 rounded-organic overflow-x-auto mb-4;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .prose strong {
+    @apply font-semibold text-charcoal;
+  }
+
+  .prose em {
+    @apply italic;
+  }
+
+  .prose hr {
+    @apply border-charcoal-200 my-6;
+  }
 }
 
 @layer utilities {

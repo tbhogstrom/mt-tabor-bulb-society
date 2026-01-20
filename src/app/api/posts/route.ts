@@ -74,6 +74,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Display name is required' }, { status: 400 });
     }
 
+    const title = (formData.get('title') as string)?.trim();
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
+
+    const body = (formData.get('body') as string)?.trim() || undefined;
     const caption = (formData.get('caption') as string)?.trim() || undefined;
     const neighborhood = (formData.get('neighborhood') as Neighborhood) || undefined;
     const speciesGuess = (formData.get('speciesGuess') as string)?.trim() || undefined;
@@ -115,6 +121,8 @@ export async function POST(request: NextRequest) {
       imageUrl,
       thumbnailUrl,
       displayName,
+      title,
+      body,
       caption,
       neighborhood,
       speciesGuess,
