@@ -1,4 +1,4 @@
-import { put, list, del } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import { ForumPost, Comment, AdminStats, Neighborhood, PostType } from '@/types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -52,31 +52,28 @@ function writeLocalJson<T>(key: string, data: T): void {
 }
 
 // Vercel Blob storage functions
+// Use BLOB_STORE_URL env var to avoid list() calls (advanced operations)
+// Set this to your blob store URL, e.g., https://xxxxx.public.blob.vercel-storage.com
+const blobStoreUrl = process.env.BLOB_STORE_URL || '';
+
 async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
   try {
-    // List blobs to find our data file
-    const { blobs } = await list({ prefix: key });
-
-    if (blobs.length === 0) {
+    if (!blobStoreUrl) {
+      console.warn('BLOB_STORE_URL not set, cannot read blob directly');
       return defaultValue;
     }
 
-    // Sort by uploadedAt descending to get the most recent blob
-    const sortedBlobs = [...blobs].sort((a, b) => 
-      new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-    );
-
-    // Fetch the blob content with cache-busting
-    const url = new URL(sortedBlobs[0].url);
+    // Construct the direct URL - no list() needed
+    const url = new URL(`${blobStoreUrl}/${key}`);
     url.searchParams.set('_t', Date.now().toString());
-    
+
     const response = await fetch(url.toString(), {
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache',
       },
     });
-    
+
     if (!response.ok) {
       return defaultValue;
     }
@@ -96,21 +93,14 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
 
 async function writeBlobJson<T>(key: string, data: T): Promise<void> {
   try {
-    // Write new data first (this creates a new blob or overwrites)
+    // Write data - with addRandomSuffix: false, this overwrites in place
+    // No need for list() or cleanup
     const jsonString = JSON.stringify(data, null, 2);
-    const newBlob = await put(key, jsonString, {
+    await put(key, jsonString, {
       access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,
     });
-
-    // Clean up any old blobs with the same prefix (except the one we just created)
-    const { blobs } = await list({ prefix: key });
-    for (const blob of blobs) {
-      if (blob.url !== newBlob.url) {
-        await del(blob.url);
-      }
-    }
   } catch (error) {
     console.error(`Error writing blob ${key}:`, error);
     throw error;
